@@ -22,7 +22,7 @@ class Wallets(DeclarativeBase):
     __tablename__ = "wallets"
 
     id = Column(BIGINT, primary_key=True, unique=True)
-    user = Column(ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    user = Column('user_id', ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
     chain = Column(VARCHAR, nullable=False)
     wallet = Column(VARCHAR, nullable=False)
     w_name = Column(VARCHAR)
