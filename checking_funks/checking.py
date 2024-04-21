@@ -248,8 +248,7 @@ async def process_transactions_erc20(transactions, last_transaction_time, chat_i
                 f.lower(), 
                 to.lower(), 
                 value, 
-                f"{t_symbol} 
-                ERC20",
+                f"{t_symbol} ERC20",
                 text, 
                 0.1, 
                 writing_address=address,contract=contract

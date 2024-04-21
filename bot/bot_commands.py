@@ -12,6 +12,7 @@ from config import ID_G
 @dp.message_handler(commands=["start"])
 @user_access
 async def cmd_start(*args, **kwargs):
+    print("абоба")
     user = kwargs["user"]
     await bot.send_message(user.chat_id, "Hello")
 
@@ -80,7 +81,7 @@ async def add_new_wallet(*args, **kwargs):
                 
                 async with session_maker() as session:
                     query = insert(Wallets).values(
-                        user=user.user_id, chain=data[0].upper(), 
+                        user_id=user.user_id, chain=data[0].upper(), 
                         wallet=data[1], w_name=w_name)
                     await session.execute(query)
                     await session.commit()
@@ -377,7 +378,7 @@ async def add_group(*args, **kwargs):
             )
             return
         
-        is_admin = len(data) > 2 and data[2] == "admin"
+        is_admin = len(data) > 2 and data[2].lower() == "admin"
         name = " ".join(data[3 if is_admin else 2::])
         
         async with session_maker() as session:
@@ -551,7 +552,6 @@ async def get_wallets(*args, **kwargs):
 @admin_access
 async def get_users(*args, **kwargs):
     user, message = kwargs["user"], kwargs["message"]
-    
     async with session_maker() as session:
         q = select(Users).order_by(Users.is_admin.desc(), Users.user_id)
         users = (await session.execute(q)).scalars().all()
@@ -565,11 +565,13 @@ async def get_users(*args, **kwargs):
                 text += "\n\nПользователи:\n"
                 admins_end = True
             type = "личный чат" if u.user_id > 0 else ("группа" if u.user_id == u.chat_id else "группа канала")
-            text += f"{j}. Тип: {type}\n" \
+            text += "\n" \
+                    f"{j}. Тип: {type}\n" \
                     f"Имя: {u.user_name}\n" \
                     f"ID чата: {u.user_id}\n" + (f"ID канала: {u.chat_id}\n" if type == "группа канала" else "")
             j +=1
-        await bot.send_message(user.chat_id, text, parse_mode="MarkDown")
+        # parse_mode="MarkDown"
+        await bot.send_message(user.chat_id, text)
         
 continueted = False
 @dp.message_handler(commands=["restart_tracking"])

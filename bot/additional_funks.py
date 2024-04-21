@@ -66,7 +66,7 @@ def developer_access(func):
             await bot.send_message(message.chat.id, "You can`t use this command!")
             return
         await func(message=message, user=ID_G, *args, **kwargs)
-
+    print("Что-то написали в канал")
     return wrapper
 
 
