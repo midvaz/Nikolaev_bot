@@ -10,7 +10,7 @@ from sqlalchemy import select
 from bot.bot_creating import bot
 from db.accessor import session_maker
 from db.models import *
-from config import ID_G, ID_CHANEL, WHITE_LIST
+from config import ID_G, ID_CHANEL, WHITE_LIST, TOKEN
 
 # декоратор скипа ошибок
 def exception_cather(func):
@@ -109,6 +109,6 @@ async def send_alert_message(
 
 
 def send_message_by_url(text):
-    url = f'https://api.telegram.org/bot5603755641:AAF5EXjubgZDFdaX-cbKqfqPXjqYuVRpgeE/sendMessage'
+    url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
     data = {'chat_id': ID_G, 'text': text}
     requests.post(url, data).json()
