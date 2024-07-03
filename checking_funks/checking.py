@@ -1,6 +1,7 @@
 import asyncio
 import time
 import traceback
+import json
 
 from aiogram import types
 from aiogram.utils.markdown import hlink
@@ -25,6 +26,7 @@ async def checking(message_id: id):
     last_transactions_time = defaultdict(
         lambda: time.mktime(datetime.datetime.now().timetuple())
     )
+    # что тут за числа ???
     block_number_tasks = [
         asyncio.create_task(get_block_number_eth(16011943)),
         asyncio.create_task(get_block_number_bsc(23408593))
@@ -60,6 +62,7 @@ async def checking(message_id: id):
                         tasks.append(asyncio.create_task(get_transactions_trc20(address.wallet)))
                         wallets_type.append({"chain": "TRC20", "address": (address.wallet, "TRC20")})
                 except BaseException as e:
+                    print(f"yyyyyyyy {address}  \n {e}")
                     send_message_by_url(address)
                     send_message_by_url(traceback.format_exc())
             if not tasks:
@@ -76,7 +79,8 @@ async def checking(message_id: id):
                                 wallets_type[i]["address"]
                             ],
                             chat_id,
-                            wallets_type[i]["address"][0])
+                            wallets_type[i]["address"][0]
+                        )
                         
                     elif wallets_type[i]["chain"] == "ERC20":
                         last_transaction_time = await process_transactions_erc20(
@@ -85,7 +89,8 @@ async def checking(message_id: id):
                                 wallets_type[i]["address"]
                             ],
                             chat_id,
-                            wallets_type[i]["address"][0])
+                            wallets_type[i]["address"][0]
+                        )
                         
                     elif wallets_type[i]["chain"] == "BTC":
                         last_transaction_time = await process_transactions_btc(
@@ -139,6 +144,7 @@ async def checking(message_id: id):
                     last_transactions_time[wallets_type[i]["address"]] = last_transaction_time
                     
                 except BaseException as e:
+                    print(f"rrrrrr {address}  \n {e}")
                     send_message_by_url(transactions)
                     send_message_by_url(traceback.format_exc())
             if num_loop == 10:
@@ -159,6 +165,7 @@ async def checking(message_id: id):
 async def get_block_number_eth(last_block):
     try:
         async with ClientSession(trust_env=True) as session:
+            # это какой-то сайт обозреватель прошедших транзаций в данной деньгах
             url = f'https://api.etherscan.io/api?'
             low = last_block
             high = 999999999
@@ -166,6 +173,7 @@ async def get_block_number_eth(last_block):
             params = {"module": "block",
                       "action": "getblockreward",
                       "blockno": round((high + low) / 2),
+                      # что за код, хуй пойми
                       'apikey': 'JK2KNMVT98447KEDW4DWWPNJE32GPRBUJJ',
                       }
             while high - 5 > low:
@@ -292,14 +300,9 @@ async def process_transactions_btc(transactions, last_transaction_time, chat_id,
             text = hlink('Link to blockchain',
                          "https://www.blockchain.com/explorer/transactions/btc/" + t["txid"])
             await send_alert_message(
-                chat_id, 
-                address, 
-                f, 
-                to, 
-                value, 
-                "BTC", 
-                text, 
-                0.001,
+                chat_id, address, f, 
+                to, value, 
+                "BTC", text, 0.001,
                 writing_address=address
             )
         else:
@@ -317,8 +320,12 @@ async def process_transactions_bsc(transactions, last_transaction_time, chat_id,
             to = t["to"]
             value = int(t["value"]) / 10e17
             text = hlink('Link to blockchain', "https://bscscan.com/tx/" + t["hash"])
-            await send_alert_message(chat_id, address.lower(), f.lower(), to.lower(), value, f"BSC BSC", text, 0.1,
-                                     writing_address=address)
+            await send_alert_message(
+                chat_id, address.lower(), 
+                f.lower(), to.lower(), 
+                value, f"BSC BSC", 
+                text, 0.1, writing_address=address
+            )
         else:
             break
     return int(transactions[-1]["timeStamp"])
@@ -332,8 +339,12 @@ async def process_transactions_bep20(transactions, last_transaction_time, chat_i
             value = int(t["value"]) / (10 ** int(t["tokenDecimal"]))
             t_name, t_symbol,t_contract = t["tokenName"], t["tokenSymbol"],t["contractAddress"]
             text = hlink('Link to blockchain', "https://bscscan.com/tx/" + t["hash"])
-            await send_alert_message(chat_id, address.lower(), f.lower(), to.lower(), value, f"{t_symbol} BEP20",
-                                     text, 0.1, writing_address=address,contract=t_contract)
+            await send_alert_message(
+                chat_id, address.lower(), 
+                f.lower(), to.lower(), 
+                value, f"{t_symbol} BEP20",text, 0.1, 
+                writing_address=address,contract=t_contract
+            )
         else:
             break
     return int(transactions[-1]["timeStamp"])
@@ -355,22 +366,83 @@ async def get_trx_tansaction_data(hash, attempt_number):
 
 
 async def process_transactions_trx(transactions, last_transaction_time, chat_id, address):
-    for t in transactions:
-        if t["raw_data"]["contract"][0]["type"] != 'TriggerSmartContract' and int(t["block_timestamp"]) / 1000 > \
-                last_transaction_time:
-            transaction_data = await get_trx_tansaction_data(t["txID"], 0)
+    print(f"_______________________ {len(transactions)}")
+    for i in range(len(transactions)):
+        # print(f'--------------------------------------sss{i} \n {json.dumps(transactions[i], indent=4)}')
+        # TransferAssetContract  TriggerSmartContract
+        # transactions[i]["raw_data"]["contract"][0]["type"] != 'TriggerSmartContract' and
+        #  int(transactions[i]["block_timestamp"]) / 1000 >= \
+        #         last_transaction_time
+        ti = int(transactions[i]["block_timestamp"]) / 1000 >= last_transaction_time
+        if  True:
+            transaction_data = await get_trx_tansaction_data(transactions[i]["txID"], 0)
             if transaction_data is None or 'ownerAddress' not in transaction_data.keys():
                 print(transactions)
                 print(transaction_data)
                 print(last_transaction_time)
-                break
+                continue
+                # break
+            
             f = transaction_data['ownerAddress']
             to = transaction_data['toAddress']
-            value = int(t["raw_data"]["contract"][0]['parameter']["value"]["amount"]) / 10e5
-            text = hlink('Link to blockchain', "https://tronscan.org/#/transaction/" + t["txID"])
-            await send_alert_message(chat_id, address, f, to, value, "TRX TRX", text, 0.1)
+            try:
+                value = int(transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["amount"]) / 10e5
+                f = int(transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["amount"]) / 10e5
+                print(f'ура1 {ti} {transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["amount"]}')
+            except:
+                # print(json.dumps(t, indent=4))
+                print(f'ура2 {ti} {transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["data"]}')
+                f = transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["data"]
+                value = int(transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["data"][72:], 16) / 1e6
+            send_message_by_url(f"проверка {f}  \n {value}")
+            text = hlink('Link to blockchain', "https://tronscan.org/#/transaction/" + transactions[i]["txID"])
+            await send_alert_message(
+                chat_id, address, 
+                f, to, value, "TRX TRX", 
+                text, 0.1
+            )
         else:
-            break
+            print(f'--------------------------------------sss{i} \n {json.dumps(transactions[i], indent=4)}')
+            continue
+            # break
+    # for t in transactions:
+    #     # print(f'--------------------------------------sss \n {json.dumps(t, indent=4)}')
+    #     # что нахуй за числа 1000 и тд ?
+    #     # TransferAssetContract
+    #     # if t["raw_data"]["contract"][0]["type"] != 'TriggerSmartContract' and int(t["block_timestamp"]) / 1000 > \
+    #     #         last_transaction_time:
+    #     # print(f'{t["block_timestamp"]}  {last_transaction_time} \n {json.dumps(t, indent=4)}')
+    #     if t["raw_data"]["contract"][0]["type"] != 'TriggerSmartContract' and int(t["block_timestamp"]) / 1000 >= \
+    #             last_transaction_time:
+    #     # if t["raw_data"]["contract"][0]["type"] != 'TransferAssetContract' :
+    #         transaction_data = await get_trx_tansaction_data(t["txID"], 0)
+    #         if transaction_data is None or 'ownerAddress' not in transaction_data.keys():
+    #             print(transactions)
+    #             print(transaction_data)
+    #             print(last_transaction_time)
+    #             break
+            
+    #         f = transaction_data['ownerAddress']
+    #         to = transaction_data['toAddress']
+    #         try:
+    #             value = int(t["raw_data"]["contract"][0]["parameter"]["value"]["amount"]) / 10e5
+    #             print(f'ура1 {t["raw_data"]["contract"][0]["parameter"]["value"]["amount"]}')
+    #         except:
+    #             # print(json.dumps(t, indent=4))
+    #             print(f'ура2 {t["raw_data"]["contract"][0]["parameter"]["value"]["data"]}')
+    #             value = int(t["raw_data"]["contract"][0]["parameter"]["value"]["data"][72:], 16) / 1e6
+    #         text = hlink('Link to blockchain', "https://tronscan.org/#/transaction/" + t["txID"])
+    #         await send_alert_message(
+    #             chat_id, address, 
+    #             f, to, value, "TRX TRX", 
+    #             text, 0.1
+    #         )
+    #     else:
+    #         break
+    
+    # print(json.dumps(transactions, indent=4))
+
+    # print(f"--------------------\n{transactions=}")
     return int(transactions[0]["block_timestamp"]) / 1000
 
 
@@ -380,9 +452,13 @@ async def process_transactions_trc20(transactions, last_transaction_time, chat_i
             f = t['from']
             to = t["to"]
             value = int(t["value"]) / (10 ** int(t["token_info"]["decimals"]))
-            t_name, t_symbol,t_contract = t["token_info"]["name"], t["token_info"]["symbol"], t["token_info"]["address"]
+            t_name, t_symbol, t_contract = t["token_info"]["name"], t["token_info"]["symbol"], t["token_info"]["address"]
             text = hlink('Link to blockchain', "https://tronscan.org/#/transaction/" + t["transaction_id"])
-            await send_alert_message(chat_id, address, f, to, value, f"{t_symbol} TRC20", text, 0.1,contract=t_contract)
+            await send_alert_message(
+                chat_id, address, f, to, 
+                value, f"{t_symbol} TRC20", 
+                text, 0.1, contract=t_contract
+            )
         else:
             break
     return int(transactions[0]["block_timestamp"]) / 1000
