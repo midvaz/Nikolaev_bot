@@ -58,6 +58,7 @@ async def get_transactions_trx(address:str, lasttime:dt.datetime) -> List[Dict]:
                     headers={"accept": "application/json"}
                 ) as response:
             result_js = await response.json()
+    print(f'{result_js["data"]=}')
     return result_js["data"]
 
 

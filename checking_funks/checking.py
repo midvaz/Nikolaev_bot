@@ -82,9 +82,11 @@ async def checking(message_id: id):
             wallets = await asyncio.gather(*tasks)
             for i, transactions in enumerate(wallets):
                 try:
-                    if transactions is None:
+                    if (transactions is None) or (len(transactions) == 0):
                         print('aboba_2')
                         continue
+                    else: 
+                        print(f"{transactions=}")
                     if wallets_type[i]["chain"] == "ETH":
                         last_transaction_time = await process_transactions_eth(
                             transactions,
@@ -404,13 +406,13 @@ async def process_transactions_trx(transactions, last_transaction_time, chat_id,
             try:
                 value = int(transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["amount"]) / 10e5
                 f = int(transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["amount"]) / 10e5
-                print(f'ура1 {ti} {transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["amount"]}')
+                # print(f'ура1 {ti} {transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["amount"]}')
             except:
                 # print(json.dumps(t, indent=4))
-                print(f'ура2 {ti} {transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["data"]}')
+                # print(f'ура2 {ti} {transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["data"]}')
                 f = transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["data"]
                 value = int(transactions[i]["raw_data"]["contract"][0]["parameter"]["value"]["data"][72:], 16) / 1e6
-            send_message_by_url(f"проверка {f}  \n {value}")
+            # send_message_by_url(f"проверка {f}  \n {value}")
             text = hlink('Link to blockchain', "https://tronscan.org/#/transaction/" + transactions[i]["txID"])
             await send_alert_message(
                 chat_id, address, 
@@ -458,7 +460,7 @@ async def process_transactions_trx(transactions, last_transaction_time, chat_id,
     
     # print(json.dumps(transactions, indent=4))
 
-    # print(f"--------------------\n{transactions=}")
+    print(f"--------------------\n{transactions=}")
     return int(transactions[0]["block_timestamp"]) / 1000
 
 
