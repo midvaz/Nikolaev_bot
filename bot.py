@@ -20,4 +20,4 @@ from config import ID_G, TOKEN
 
 # Запуск процесса поллинга новых апдейтов
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp, skip_updates=True, on_startup=on_start)

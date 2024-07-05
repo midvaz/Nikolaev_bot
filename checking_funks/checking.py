@@ -2,6 +2,7 @@ import asyncio
 import time
 import traceback
 import json
+import datetime as dt
 
 from aiogram import types
 from aiogram.utils.markdown import hlink
@@ -16,6 +17,8 @@ from collections import defaultdict
 
 from checking_funks.transaction_geters import *
 
+BLOCK_ETH=16011943
+BLOCK_BSC=23408593
 
 async def checking(message_id: id):
     # получение id для отправки сообщения
@@ -26,14 +29,19 @@ async def checking(message_id: id):
     last_transactions_time = defaultdict(
         lambda: time.mktime(datetime.datetime.now().timetuple())
     )
-    # что тут за числа ???
+    
     block_number_tasks = [
-        asyncio.create_task(get_block_number_eth(16011943)),
-        asyncio.create_task(get_block_number_bsc(23408593))
+        asyncio.create_task(get_block_number_eth(BLOCK_ETH)),
+        asyncio.create_task(get_block_number_bsc(BLOCK_BSC))
     ]
     start_block_eth, start_block_bsc = await asyncio.gather(*block_number_tasks)
     num_loop = 0
+    count = 0
+    
     while True:
+        last_time = dt.timedelta(seconds=30)
+        count += 1
+        # print(count)
         async with session_maker() as session:
             make_requests = (await session.get(TrackingFlags, user.user_id)).flag
             if not make_requests: return
@@ -57,20 +65,25 @@ async def checking(message_id: id):
                         tasks.append(asyncio.create_task(get_transactions_bep20(start_block_bsc, address.wallet)))
                         wallets_type.append({"chain": "BEP20", "address": (address.wallet, "BEP20")})
                     elif address.chain == "TRC":
-                        tasks.append(asyncio.create_task(get_transactions_trx(address.wallet)))
+                        tasks.append(asyncio.create_task(get_transactions_trx(address.wallet, last_time)))
                         wallets_type.append({"chain": "TRX", "address": (address.wallet, "TRX")})
-                        tasks.append(asyncio.create_task(get_transactions_trc20(address.wallet)))
+                        tasks.append(asyncio.create_task(get_transactions_trc20(address.wallet, last_time)))
                         wallets_type.append({"chain": "TRC20", "address": (address.wallet, "TRC20")})
                 except BaseException as e:
                     print(f"yyyyyyyy {address}  \n {e}")
                     send_message_by_url(address)
                     send_message_by_url(traceback.format_exc())
+            print(f'{tasks=}')
             if not tasks:
+                # print('aboba')
+                await asyncio.sleep(30)
                 continue
+                
             wallets = await asyncio.gather(*tasks)
             for i, transactions in enumerate(wallets):
                 try:
                     if transactions is None:
+                        print('aboba_2')
                         continue
                     if wallets_type[i]["chain"] == "ETH":
                         last_transaction_time = await process_transactions_eth(
@@ -157,8 +170,11 @@ async def checking(message_id: id):
                 ]
                 start_block_eth, start_block_bsc = await asyncio.gather(*block_number_tasks)
                 num_loop = 0
-            await asyncio.sleep(60)
+            
             num_loop += 1
+        await asyncio.sleep(30)
+        print(count)
+            # time.sleep(30)
 
 
 

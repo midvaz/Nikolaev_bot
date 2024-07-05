@@ -9,10 +9,20 @@ from messege import messege_help
 
 from config import ID_G
 
+async def on_start(dp: Dispatcher) -> None:
+    async with session_maker() as session:
+        user_id = select(TrackingFlags.user_flag_id).where(TrackingFlags.flag==True)
+        user_query = (await session.execute(user_id)).all()
+    tasks = []
+    for temp in user_query:
+        tasks.append(checking(temp[0]))
+    print('Start old checking')
+    await asyncio.gather(*tasks)
+    
+        
 @dp.message_handler(commands=["start"])
 @user_access
 async def cmd_start(*args, **kwargs):
-    print("абоба")
     user = kwargs["user"]
     await bot.send_message(user.chat_id, "Hello")
 

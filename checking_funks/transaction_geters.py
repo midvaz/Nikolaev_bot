@@ -1,4 +1,8 @@
 import asyncio
+import datetime as dt
+import requests
+import json
+from typing import List, Dict
 
 from aiohttp import ClientSession
 
@@ -6,29 +10,55 @@ from bot.additional_funks import exception_cather
 
 
 @exception_cather
-async def get_transactions_trc20(address):
+async def get_transactions_trc20(address:str, lasttime:dt.datetime) -> List[Dict]:
     async with ClientSession(trust_env=True) as session:
+        # url = f'https://api.trongrid.io/v1/accounts/{address}/transactions/trc20?'
+        # params = {
+        #     "sort": 'blockNumber',
+        #     'limit': 10,
+        # }
+        # async with session.get(url=url, params=params) as response:
+        #     result_json = await response.json(content_type=None)
+        # return result_json["data"]
         url = f'https://api.trongrid.io/v1/accounts/{address}/transactions/trc20?'
+        # url = f'https://api.trongrid.io/v1/accounts/{address}/transactions?'
         params = {
-            "sort": 'blockNumber',
-            'limit': 10,
+            'min_timestamp': dt.datetime.timestamp(dt.datetime.now() - lasttime)*1000,
+            'limit': 200,
+            "only_confirmed": "True",
         }
-        async with session.get(url=url, params=params) as response:
-            result_json = await response.json(content_type=None)
-        return result_json["data"]
+        async with session.get(
+                    url=url, 
+                    params=params, 
+                    headers={"accept": "application/json"}
+                ) as response:
+            result_js = await response.json()
+    return result_js["data"]
 
 
 @exception_cather
-async def get_transactions_trx(address):
+async def get_transactions_trx(address:str, lasttime:dt.datetime) -> List[Dict]:
     async with ClientSession(trust_env=True) as session:
         url = f'https://api.trongrid.io/v1/accounts/{address}/transactions/'
+    #     params = {
+    #         "sort": 'blockNumber',
+    #         'limit': 10,
+    #     }
+    #     async with session.get(url=url, params=params) as response:
+    #         result_json = await response.json(content_type=None)
+    # return result_json["data"]
         params = {
-            "sort": 'blockNumber',
-            'limit': 10,
+            'min_timestamp': dt.datetime.timestamp(dt.datetime.now() - lasttime)*1000,
+            'limit': 200,
+            "only_confirmed": "True",
         }
-        async with session.get(url=url, params=params) as response:
-            result_json = await response.json(content_type=None)
-    return result_json["data"]
+        async with session.get(
+                    url=url, 
+                    params=params, 
+                    headers={"accept": "application/json"}
+                ) as response:
+            result_js = await response.json()
+    return result_js["data"]
 
 
 @exception_cather
