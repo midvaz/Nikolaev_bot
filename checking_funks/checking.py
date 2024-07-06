@@ -174,8 +174,8 @@ async def checking(message_id: id):
                 num_loop = 0
             
             num_loop += 1
-        await asyncio.sleep(60)
         print('Количество проходок =',count)
+        await asyncio.sleep(60)
             # time.sleep(30)
 
 

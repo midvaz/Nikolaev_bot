@@ -27,8 +27,6 @@ async def get_transactions_trc20(address:str, lasttime:dt.datetime) -> List[Dict
             'limit': 20,
             "only_confirmed": "True",
         }
-        
-        print(f'{dt.datetime.now() - lasttime}')
         async with session.get(
                     url=url, 
                     params=params, 
@@ -161,5 +159,6 @@ async def get_transactions_btc(address):
     async with ClientSession(trust_env=True) as session:
         url = f"https://btcscan.org/api/address/{address}/txs"
         async with session.get(url=url) as response:
-            result_json = await response.json()
+            result_json = await response.json(content_type='text/html')
+            print(f'{result_json=}')
             return result_json

@@ -19,6 +19,13 @@ from config import ID_G, TOKEN
 # requests.post(url, data).json()
 
 # Запуск процесса поллинга новых апдейтов
+
+async def on_startup(dp):
+    asyncio.create_task(on_start())
+
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True, on_startup=on_start)
-    # executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(
+        dp, skip_updates=True, 
+        on_startup=on_startup
+    )
+

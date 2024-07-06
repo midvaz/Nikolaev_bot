@@ -9,7 +9,7 @@ from messege import messege_help
 
 from config import ID_G
 
-async def on_start(dp: Dispatcher) -> None:
+async def on_start() -> None:
     async with session_maker() as session:
         user_id = select(TrackingFlags.user_flag_id).where(TrackingFlags.flag==True)
         user_query = (await session.execute(user_id)).all()
