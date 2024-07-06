@@ -39,7 +39,7 @@ async def checking(message_id: id):
     count = 0
     
     while True:
-        last_time = dt.timedelta(seconds=30)
+        last_time = dt.timedelta(seconds=60)
         count += 1
         # print(count)
         async with session_maker() as session:
@@ -75,7 +75,7 @@ async def checking(message_id: id):
                     send_message_by_url(traceback.format_exc())
             print(f'{tasks=}')
             if not tasks:
-                # print('aboba')
+                print('not tasks')
                 await asyncio.sleep(30)
                 continue
                 
@@ -83,7 +83,7 @@ async def checking(message_id: id):
             for i, transactions in enumerate(wallets):
                 try:
                     if (transactions is None) or (len(transactions) == 0):
-                        print('aboba_2')
+                        print(f'(transactions is None) or (len(transactions) == 0)\n{transactions=}\n')
                         continue
                     else: 
                         print(f"{transactions=}")
@@ -174,8 +174,8 @@ async def checking(message_id: id):
                 num_loop = 0
             
             num_loop += 1
-        await asyncio.sleep(30)
-        print(count)
+        await asyncio.sleep(60)
+        print('Количество проходок =',count)
             # time.sleep(30)
 
 

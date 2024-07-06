@@ -24,9 +24,11 @@ async def get_transactions_trc20(address:str, lasttime:dt.datetime) -> List[Dict
         # url = f'https://api.trongrid.io/v1/accounts/{address}/transactions?'
         params = {
             'min_timestamp': dt.datetime.timestamp(dt.datetime.now() - lasttime)*1000,
-            'limit': 200,
+            'limit': 20,
             "only_confirmed": "True",
         }
+        
+        print(f'{dt.datetime.now() - lasttime}')
         async with session.get(
                     url=url, 
                     params=params, 
