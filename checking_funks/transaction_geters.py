@@ -66,11 +66,22 @@ async def get_transactions_trx(address:str, lasttime:dt.datetime) -> List[Dict]:
 async def get_transactions_eth(start_block, address):
     async with ClientSession(trust_env=True) as session:
         url = f'https://api.etherscan.io/api?'
+        # params = {'module': 'account',
+        #           'action': 'txlist',
+        #           'address': address,
+        #           'startblock': start_block - 1000,
+        #           'endblock': 999999999,
+        #           'apikey': 'JK2KNMVT98447KEDW4DWWPNJE32GPRBUJJ',
+        #           }
+        
         params = {'module': 'account',
                   'action': 'txlist',
                   'address': address,
-                  'startblock': start_block - 1000,
+                  'startblock': start_block - 100,
                   'endblock': 999999999,
+                  'page': 1,
+                  'offset': 200,
+                  'sort': 'desc',
                   'apikey': 'JK2KNMVT98447KEDW4DWWPNJE32GPRBUJJ',
                   }
         result_json = {"result": "Max rate limit reached"}
@@ -157,8 +168,24 @@ async def get_transactions_bep20(start_block, address):
 @exception_cather
 async def get_transactions_btc(address):
     async with ClientSession(trust_env=True) as session:
-        url = f"https://btcscan.org/api/address/{address}/txs"
-        async with session.get(url=url) as response:
-            result_json = await response.json(content_type='text/html')
-            print(f'{result_json=}')
-            return result_json
+        url = f'https://blockchain.info/rawaddr/{address}'
+        params = {
+            'limit': '50'
+        }
+        async with session.get(url=url, params=params) as response:
+            result_json = await response.json()
+            print(result_json)
+            try:
+                result = result_json['txs']
+                return result
+            except KeyError as e:
+                if result_json['error'] == 'not-found-or-invalid-arg':
+                    print("Нет кошелька, желательно это отправлять пользователю ")
+                return []
+            # print(f"ПРОВЕРКА ИИИИ  {data}")
+            # result_json = json.loads(data)
+
+            
+            # result_json = await response.json(content_type='text/html')
+            # print(f'{result_json=}')
+            # return result_json

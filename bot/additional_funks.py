@@ -78,14 +78,14 @@ async def del_message_safety(message: types.Message):
 
 # функция, реализующая подготовку и отправку уведомления
 async def send_alert_message(
-    chat_id, 
-    owner_address, 
-    sender_address, 
-    receiver_address, 
-    value, 
-    coin_sgn, 
-    blockchain_link,
-    threshold,
+    chat_id:any, 
+    owner_address:str, 
+    sender_address:str, 
+    receiver_address:str, 
+    value:str | float, 
+    coin_sgn:str, 
+    blockchain_link:str,
+    threshold:str,
     writing_address=None,
     contract='plug'
 ):

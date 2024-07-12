@@ -29,9 +29,9 @@ async def checking(message_id: id):
     last_transactions_time = defaultdict(
         lambda: time.mktime(datetime.datetime.now().timetuple())
     )
-    
+    last_transaction_time = time.mktime(datetime.datetime.now().timetuple())
     block_number_tasks = [
-        asyncio.create_task(get_block_number_eth(BLOCK_ETH)),
+        asyncio.create_task(get_block_number_eth(BLOCK_ETH, last_transaction_time)),
         asyncio.create_task(get_block_number_bsc(BLOCK_BSC))
     ]
     start_block_eth, start_block_bsc = await asyncio.gather(*block_number_tasks)
@@ -59,11 +59,13 @@ async def checking(message_id: id):
                     elif address.chain == "BTC":
                         tasks.append(asyncio.create_task(get_transactions_btc(address.wallet)))
                         wallets_type.append({"chain": "BTC", "address": (address.wallet, "BTC")})
-                    elif address.chain == "BSC":
-                        tasks.append(asyncio.create_task(get_transactions_bsc(start_block_bsc, address.wallet)))
-                        wallets_type.append({"chain": "BSC", "address": (address.wallet, "BSC")})
-                        tasks.append(asyncio.create_task(get_transactions_bep20(start_block_bsc, address.wallet)))
-                        wallets_type.append({"chain": "BEP20", "address": (address.wallet, "BEP20")})
+                    # Не работает 
+                    # elif address.chain == "BSC":
+                    #     tasks.append(asyncio.create_task(get_transactions_bsc(start_block_bsc, address.wallet)))
+                    #     wallets_type.append({"chain": "BSC", "address": (address.wallet, "BSC")})
+                    #     tasks.append(asyncio.create_task(get_transactions_bep20(start_block_bsc, address.wallet)))
+                    #     wallets_type.append({"chain": "BEP20", "address": (address.wallet, "BEP20")})
+                    
                     elif address.chain == "TRC":
                         tasks.append(asyncio.create_task(get_transactions_trx(address.wallet, last_time)))
                         wallets_type.append({"chain": "TRX", "address": (address.wallet, "TRX")})
@@ -73,7 +75,7 @@ async def checking(message_id: id):
                     print(f"yyyyyyyy {address}  \n {e}")
                     send_message_by_url(address)
                     send_message_by_url(traceback.format_exc())
-            print(f'{tasks=}')
+            # print(f'{tasks=}')
             if not tasks:
                 print('not tasks')
                 await asyncio.sleep(30)
@@ -85,9 +87,16 @@ async def checking(message_id: id):
                     if (transactions is None) or (len(transactions) == 0):
                         print(f'(transactions is None) or (len(transactions) == 0)\n{transactions=}\n')
                         continue
-                    else: 
-                        print(f"{transactions=}")
-                    if wallets_type[i]["chain"] == "ETH":
+                    # else:
+                        # try:
+                            # if wallets_type[i]["chain"] != "TRC20":
+                                # print(f"ПРОВЕРКА1 { last_transactions_time[wallets_type[i]['address']]}  { wallets_type[i] } {transactions=}")
+                        # except BaseException as e:
+                        #     print(f"ПРОВЕРКА2 {e}")
+                    
+                    time_difference = dt.datetime.now() - dt.datetime.fromtimestamp(last_transactions_time[wallets_type[i]['address']])
+                    if wallets_type[i]["chain"] == "ETH" and time_difference.total_seconds() >10:
+                        print("_________________________________________________________________________")
                         last_transaction_time = await process_transactions_eth(
                             transactions,
                             last_transactions_time[
@@ -97,7 +106,7 @@ async def checking(message_id: id):
                             wallets_type[i]["address"][0]
                         )
                         
-                    elif wallets_type[i]["chain"] == "ERC20":
+                    elif wallets_type[i]["chain"] == "ERC20" and time_difference.total_seconds() >10:
                         last_transaction_time = await process_transactions_erc20(
                             transactions,
                             last_transactions_time[
@@ -107,35 +116,34 @@ async def checking(message_id: id):
                             wallets_type[i]["address"][0]
                         )
                         
+                    
                     elif wallets_type[i]["chain"] == "BTC":
                         last_transaction_time = await process_transactions_btc(
                             transactions, 
-                            last_transactions_time[
-                                wallets_type[i]["address"]
-                            ],
+                            last_transaction_time,
                             chat_id,
                             wallets_type[i]["address"][0]
                         )
+                    # не работает 
+                    # elif wallets_type[i]["chain"] == "BSC":
+                    #     last_transaction_time = await process_transactions_bsc(
+                    #         transactions, 
+                    #         last_transactions_time[
+                    #             wallets_type[i]["address"]
+                    #         ],
+                    #         chat_id,
+                    #         wallets_type[i]["address"][0]
+                    #     )
                         
-                    elif wallets_type[i]["chain"] == "BSC":
-                        last_transaction_time = await process_transactions_bsc(
-                            transactions, 
-                            last_transactions_time[
-                                wallets_type[i]["address"]
-                            ],
-                            chat_id,
-                            wallets_type[i]["address"][0]
-                        )
-                        
-                    elif wallets_type[i]["chain"] == "BEP20":
-                        last_transaction_time = await process_transactions_bep20(
-                            transactions, 
-                            last_transactions_time[
-                                wallets_type[i]["address"]
-                            ],
-                            chat_id,
-                            wallets_type[i]["address"][0]
-                        )
+                    # elif wallets_type[i]["chain"] == "BEP20":
+                    #     last_transaction_time = await process_transactions_bep20(
+                    #         transactions, 
+                    #         last_transactions_time[
+                    #             wallets_type[i]["address"]
+                    #         ],
+                    #         chat_id,
+                    #         wallets_type[i]["address"][0]
+                    #     )
                         
                     elif wallets_type[i]["chain"] == "TRX":
                         last_transaction_time = await process_transactions_trx(
@@ -146,7 +154,6 @@ async def checking(message_id: id):
                             chat_id,
                             wallets_type[i]["address"][0]
                         )
-                        
                     elif wallets_type[i]["chain"] == "TRC20":
                         last_transaction_time = await process_transactions_trc20(
                             transactions, 
@@ -156,6 +163,7 @@ async def checking(message_id: id):
                             chat_id,
                             wallets_type[i]["address"][0]
                         )
+                    # print(f" GHJDNTHRF _______ {last_transactions_time[wallets_type[i]['address']]}  {last_transaction_time} {time.mktime(datetime.datetime.now().timetuple())}")
                     last_transactions_time[wallets_type[i]["address"]] = last_transaction_time
                     
                 except BaseException as e:
@@ -167,30 +175,35 @@ async def checking(message_id: id):
                     last_transactions_time[i] = time.mktime(datetime.datetime.now().timetuple())
             if num_loop == 60:
                 block_number_tasks = [
-                    asyncio.create_task(get_block_number_eth(16011943)),
+                    asyncio.create_task(get_block_number_eth(16011943, last_transaction_time)),
                     asyncio.create_task(get_block_number_bsc(23408593))
                 ]
                 start_block_eth, start_block_bsc = await asyncio.gather(*block_number_tasks)
                 num_loop = 0
             
             num_loop += 1
-        print('Количество проходок =',count)
+        # print('Количество проходок =',count)
         await asyncio.sleep(60)
             # time.sleep(30)
 
 
 
-async def get_block_number_eth(last_block):
+async def get_block_number_eth(last_block, last_transaction_time):
     try:
         async with ClientSession(trust_env=True) as session:
+
             # это какой-то сайт обозреватель прошедших транзаций в данной деньгах
             url = f'https://api.etherscan.io/api?'
             low = last_block
             high = 999999999
-
+            date_from_timestamp = datetime.datetime.fromtimestamp(last_transaction_time).strftime("%Y-%m-%d")
+            print(f'ПРОВЕРКАААА  {date_from_timestamp}   { datetime.datetime.now().strftime("%Y-%m-%d") }')
             params = {"module": "block",
                       "action": "getblockreward",
                       "blockno": round((high + low) / 2),
+                        # эт я добавила
+                      "startdate":   date_from_timestamp,
+                      "enddate":   datetime.datetime.now().strftime("%Y-%m-%d"),
                       # что за код, хуй пойми
                       'apikey': 'JK2KNMVT98447KEDW4DWWPNJE32GPRBUJJ',
                       }
@@ -255,11 +268,13 @@ async def process_transactions_eth(transactions, last_transaction_time, chat_id,
                 writing_address=address
             )
         else:
-            break
-    return int(transactions[-1]["timeStamp"])
+            continue
+    print(f'ПРОВЕРКА1 { transactions[-1]["timeStamp"]}  { transactions[0]["timeStamp"] } {time.mktime(datetime.datetime.now().timetuple())}')
+    return int(transactions[0]["timeStamp"])
 
 
 async def process_transactions_erc20(transactions, last_transaction_time, chat_id, address):
+    # last_transaction_timestamp = last_transaction_time.timestamp()
     for t in transactions[::-1]:
         if int(t["timeStamp"]) > last_transaction_time:
             f = t["from"]
@@ -280,55 +295,78 @@ async def process_transactions_erc20(transactions, last_transaction_time, chat_i
                 writing_address=address,contract=contract
             )
         else:
-            break
-    return int(transactions[-1]["timeStamp"])
+            continue
+    # return int(transactions[-1]["timeStamp"]) поменяла потому что вроде сортирую 
+    return int(transactions[0]["timeStamp"])
 
 
 async def process_transactions_btc(transactions, last_transaction_time, chat_id, address):
-    have_updates = False
-    for i, t in enumerate(transactions):
-        if t["status"]["confirmed"]:
-            t_time = int(t["status"]["block_time"])
-            if not have_updates:
-                first_confirmed_transaction = i
-            have_updates = True
-        else:
-            continue
+    for transaction in transactions:
+        t_time = transaction['time']
+
         if t_time > last_transaction_time:
-            value = 0
-            is_output_trans = False
-            for vin in t["vin"]:
-                if vin["prevout"]["scriptpubkey_address"] == address:
-                    value = vin["prevout"]["value"] / 10e7
-                    is_output_trans = True
-            for vout in t["vout"]:
-                if vout["scriptpubkey_address"] == address:
-                    value = vout["value"] / 10e7
-            f = []
-            if is_output_trans:
-                for vout in t["vout"]:
-                    f.append(vout["scriptpubkey_address"])
-            else:
-                for vin in t["vin"]:
-                    f.append(vin["prevout"]["scriptpubkey_address"])
-            f = "\n".join(f)
-            to = address
-            if is_output_trans:
-                f, to = to, f
-            text = hlink('Link to blockchain',
-                         "https://www.blockchain.com/explorer/transactions/btc/" + t["txid"])
+            amount = transaction['balance']/10e7
+            hash = transaction['hash']
+            to_ = transaction['inputs'][0]['prev_out']['addr']
+            try:
+                from_ = transaction['out'][0]['addr']
+            except:
+                from_ = transaction['out'][1]['addr']
+            text = hlink('Link to blockchain', "https://www.blockchain.com/ru/explorer/transactions/btc/" + hash)
             await send_alert_message(
-                chat_id, address, f, 
-                to, value, 
-                "BTC", text, 0.001,
-                writing_address=address
+                chat_id=chat_id, owner_address=address, 
+                sender_address=from_, 
+                receiver_address=to_, value=amount, 
+                coin_sgn="BTC", blockchain_link=text, 
+                threshold=0.001, writing_address=address
             )
         else:
-            break
-    if have_updates:
-        return int(transactions[first_confirmed_transaction]["status"]["block_time"])
-    else:
-        return last_transaction_time
+            continue
+    return transactions[0]['time']
+    # have_updates = False
+    # for i, t in enumerate(transactions):
+    #     if t["status"]["confirmed"]:
+    #         t_time = int(t["status"]["block_time"])
+    #         if not have_updates:
+    #             first_confirmed_transaction = i
+    #         have_updates = True
+    #     else:
+    #         continue
+    #     if t_time > last_transaction_time:
+    #         value = 0
+    #         is_output_trans = False
+    #         for vin in t["vin"]:
+    #             if vin["prevout"]["scriptpubkey_address"] == address:
+    #                 value = vin["prevout"]["value"] / 10e7
+    #                 is_output_trans = True
+    #         for vout in t["vout"]:
+    #             if vout["scriptpubkey_address"] == address:
+    #                 value = vout["value"] / 10e7
+    #         f = []
+    #         if is_output_trans:
+    #             for vout in t["vout"]:
+    #                 f.append(vout["scriptpubkey_address"])
+    #         else:
+    #             for vin in t["vin"]:
+    #                 f.append(vin["prevout"]["scriptpubkey_address"])
+    #         f = "\n".join(f)
+    #         to = address
+    #         if is_output_trans:
+    #             f, to = to, f
+    #         text = hlink('Link to blockchain',
+    #                      "https://www.blockchain.com/explorer/transactions/btc/" + t["txid"])
+    #         await send_alert_message(
+    #             chat_id, address, f, 
+    #             to, value, 
+    #             "BTC", text, 0.001,
+    #             writing_address=address
+    #         )
+    #     else:
+    #         continue
+    # if have_updates:
+    #     return int(transactions[first_confirmed_transaction]["status"]["block_time"])
+    # else:
+    #     return last_transaction_time
 
 
 async def process_transactions_bsc(transactions, last_transaction_time, chat_id, address):
@@ -345,7 +383,7 @@ async def process_transactions_bsc(transactions, last_transaction_time, chat_id,
                 text, 0.1, writing_address=address
             )
         else:
-            break
+            continue
     return int(transactions[-1]["timeStamp"])
 
 
@@ -364,7 +402,7 @@ async def process_transactions_bep20(transactions, last_transaction_time, chat_i
                 writing_address=address,contract=t_contract
             )
         else:
-            break
+            continue
     return int(transactions[-1]["timeStamp"])
 
 
@@ -478,5 +516,5 @@ async def process_transactions_trc20(transactions, last_transaction_time, chat_i
                 text, 0.1, contract=t_contract
             )
         else:
-            break
+            continue
     return int(transactions[0]["block_timestamp"]) / 1000
