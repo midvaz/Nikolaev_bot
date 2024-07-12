@@ -78,17 +78,17 @@ async def del_message_safety(message: types.Message):
 
 # функция, реализующая подготовку и отправку уведомления
 async def send_alert_message(
-    chat_id:any, 
+    chat_id:int, 
     owner_address:str, 
     sender_address:str, 
     receiver_address:str, 
-    value:str | float, 
+    value:str, 
     coin_sgn:str, 
     blockchain_link:str,
     threshold:str,
     writing_address=None,
     contract='plug'
-):
+) -> None:
     if value < threshold or contract.lower() not in WHITE_LIST:
         return
     if writing_address is None:

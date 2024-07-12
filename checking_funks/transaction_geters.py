@@ -58,7 +58,6 @@ async def get_transactions_trx(address:str, lasttime:dt.datetime) -> List[Dict]:
                     headers={"accept": "application/json"}
                 ) as response:
             result_js = await response.json()
-    print(f'{result_js["data"]=}')
     return result_js["data"]
 
 
@@ -174,7 +173,6 @@ async def get_transactions_btc(address):
         }
         async with session.get(url=url, params=params) as response:
             result_json = await response.json()
-            print(result_json)
             try:
                 result = result_json['txs']
                 return result
