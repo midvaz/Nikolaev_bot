@@ -1,26 +1,26 @@
 version: "3.7"
 services:
-  # alert_pg:
-  #   image: postgres:13
-  #   container_name: alert_pg
-  #   restart: always
-  #   environment:
-  #     - POSTGRES_DB=postgres
-  #     - POSTGRES_USER=postgres
-  #     - POSTGRES_PASSWORD=postgres
-  #   volumes:
-  #     - postgres_data_back:/var/lib/postgresql/data
-  #   ports:
-  #     - "4000:5432"
-  etherbot:
-    container_name: etherbot
-    build: .
+  alert_pg:
+    image: postgres:13
+    container_name: alert_pg
     restart: always
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_HOSTS=pg:4000
+    volumes:
+      - postgres_data_back:/var/lib/postgresql/data
+    ports:
+      - "4000:5432"
+#   etherbot:
+#     container_name: etherbot
+#     build: .
+#     restart: always
+#     environment:
+#       - POSTGRES_DB=postgres
+#       - POSTGRES_USER=postgres
+#       - POSTGRES_PASSWORD=postgres
+#       - POSTGRES_HOSTS=pg:4000
 volumes:
   postgres_data_back:
     driver: local

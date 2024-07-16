@@ -87,7 +87,7 @@ async def checking(message_id: id):
             for i, transactions in enumerate(wallets):
                 try:
                     if (transactions is None) or (len(transactions) == 0):
-                        print(f'(transactions is None) or (len(transactions) == 0)\n{transactions=}\n')
+                        # print(f'(transactions is None) or (len(transactions) == 0)\n{transactions=}\n')
                         continue
                     # else:
                         # try:
@@ -195,7 +195,7 @@ async def get_block_number_eth(last_block, last_transaction_time):
             low = last_block
             high = 999999999
             date_from_timestamp = datetime.datetime.fromtimestamp(last_transaction_time).strftime("%Y-%m-%d")
-            print(f'ПРОВЕРКАААА  {date_from_timestamp}   { datetime.datetime.now().strftime("%Y-%m-%d") }')
+            # print(f'ПРОВЕРКАААА  {date_from_timestamp}   { datetime.datetime.now().strftime("%Y-%m-%d") }')
             params = {"module": "block",
                       "action": "getblockreward",
                       "blockno": round((high + low) / 2),
@@ -267,7 +267,7 @@ async def process_transactions_eth(transactions, last_transaction_time, chat_id,
             )
         else:
             continue
-    print(f'ПРОВЕРКА1 { transactions[-1]["timeStamp"]}  { transactions[0]["timeStamp"] } {time.mktime(datetime.datetime.now().timetuple())}')
+    # print(f'ПРОВЕРКА1 { transactions[-1]["timeStamp"]}  { transactions[0]["timeStamp"] } {time.mktime(datetime.datetime.now().timetuple())}')
     return int(transactions[0]["timeStamp"])
 
 
@@ -299,10 +299,22 @@ async def process_transactions_erc20(transactions, last_transaction_time, chat_i
 
 
 async def process_transactions_btc(transactions, last_transaction_time, chat_id, address):
+    date_from_timestamp = datetime.datetime.fromtimestamp(last_transaction_time).strftime("%Y-%m-%d  %H:%M:%S")
+    data_2 = datetime.datetime.fromtimestamp(transactions[0]["time"]).strftime("%Y-%m-%d  %H:%M:%S")
+    print(f'btc ПРОВЕРКА {address}\n last_time {date_from_timestamp} | дата транзакции {data_2}', f'| время сейчас{ datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} ')
+    print()
+
     for transaction in transactions:
         t_time = transaction['time']
         if t_time > last_transaction_time:
-            amount = transaction['balance']/10e7
+            with open('./logs.json', 'w+') as outfile:
+                json.dump(transaction, outfile)
+                
+            print('---------------',json.dumps(transaction, indent=4))
+            # amount = transaction['balance']/10e7
+            amount = 0
+            for i in transaction['out']:
+                amount+=int(i['value'])/10e7
             hash = transaction['hash']
             to_ = transaction['inputs'][0]['prev_out']['addr']
             try:
@@ -319,7 +331,11 @@ async def process_transactions_btc(transactions, last_transaction_time, chat_id,
             )
         else:
             continue
-    return transactions[0]['time']
+    t_time = transactions[0]['time']
+    if t_time > last_transaction_time:
+        return transactions[0]['time']
+    else:
+        return last_transaction_time
 
 
 # не работает
