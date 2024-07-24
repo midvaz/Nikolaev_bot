@@ -301,7 +301,7 @@ async def process_transactions_erc20(transactions, last_transaction_time, chat_i
 async def process_transactions_btc(transactions, last_transaction_time, chat_id, address):
     date_from_timestamp = datetime.datetime.fromtimestamp(last_transaction_time).strftime("%Y-%m-%d  %H:%M:%S")
     data_2 = datetime.datetime.fromtimestamp(transactions[0]["time"]).strftime("%Y-%m-%d  %H:%M:%S")
-    print(f'btc ПРОВЕРКА {address}\n last_time {date_from_timestamp} | дата транзакции {data_2}', f'| время сейчас{ datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} ')
+    print(f'btc ПРОВЕРКА {address}\n last_time {date_from_timestamp} | дата транзакции {data_2}', f'| время сейчас {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} ')
     print()
 
     for transaction in transactions:
@@ -310,11 +310,12 @@ async def process_transactions_btc(transactions, last_transaction_time, chat_id,
             with open('./logs.json', 'w+') as outfile:
                 json.dump(transaction, outfile)
                 
-            print('---------------',json.dumps(transaction, indent=4))
+            # print('---------------',json.dumps(transaction, indent=4))
             # amount = transaction['balance']/10e7
             amount = 0
             for i in transaction['out']:
-                amount+=int(i['value'])/10e7
+                amount+=int(i['value'])
+            amount=amount/10e7
             hash = transaction['hash']
             to_ = transaction['inputs'][0]['prev_out']['addr']
             try:

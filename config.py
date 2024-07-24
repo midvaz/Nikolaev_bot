@@ -1,8 +1,6 @@
-TOKEN = "6037712780:AAHRo2jgycDeTzxsTGaHZbgih8s96BLAlc8"
-ID_G = 479979542
-# 459082753
-# 479979542
-ID_CHANEL = -1002071445211
+TOKEN = "поставь сюда токен бота"
+ID_G = поставь сюда id админа
+ID_CHANEL = поставь сюда id канала
 
 WHITE_LIST = ["plug",  # заглушка для бесконтрактовых
     'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'.lower(),  # USDT TRC20
